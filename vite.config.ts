@@ -12,7 +12,7 @@ export default defineConfig(async () => {
      * Change `impactrising` to your repo name
      * Example URL: https://username.github.io/impactrising/
      */
-    base: isProduction ? "/impactrising/" : "/",
+    base: isProduction ? "/ImpactRising/" : "/",
 
     root: path.resolve(import.meta.dirname, "client"),
 
