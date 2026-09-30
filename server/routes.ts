@@ -4,6 +4,27 @@ import { storage } from "./storage";
 import { insertContactSchema, insertVolunteerSchema, insertDonationSchema, insertNewsletterSchema, insertBlogPostSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+
+  // Database/storage health check
+  app.get("/api/health/db", async (_req, res) => {
+    try {
+      const healthy = await storage.healthCheck();
+      res.json({
+        ok: healthy,
+        storage: storage.mode,
+        databaseConfigured: storage.mode === "database",
+      });
+    } catch (error) {
+      console.error("Database health check failed:", error);
+      res.status(503).json({
+        ok: false,
+        storage: storage.mode,
+        databaseConfigured: storage.mode === "database",
+        error: "Database connection failed",
+      });
+    }
+  });
+
   // Contact form submission
   app.post("/api/contacts", async (req, res) => {
     try {
