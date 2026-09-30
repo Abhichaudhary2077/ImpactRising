@@ -214,12 +214,12 @@ export default function GetInvolved() {
                       </div>
                       <div className="flex justify-center">
                         <div className="w-64 h-64 rounded-lg border bg-white p-2 flex items-center justify-center">
-                          <img src="/donation-qr.png" alt="Impact Rising UPI QR code" className="w-full h-full object-contain" />
+                          <img src={`${import.meta.env.BASE_URL}donation-qr.png`} alt="Impact Rising UPI QR code" className="w-full h-full object-contain" />
                           <QrCode className="hidden" />
                         </div>
                       </div>
                       <p className="text-xs text-center text-muted-foreground">
-                        Add your real <code>donation-qr.png</code> and replace <code>YOUR_UPI_ID@UPI</code> after pulling this change.
+                        Scan this QR code with your UPI app to make a one-time donation.
                       </p>
                     </>
                   )}
@@ -227,7 +227,7 @@ export default function GetInvolved() {
               </div>
 
               <div className="text-center text-sm text-muted-foreground" data-testid="donation-footer">
-                One-time donations are paid directly to the configured NGO UPI account.
+                One-time donations are paid directly to the configured UPI account.
               </div>
             </div>
 
