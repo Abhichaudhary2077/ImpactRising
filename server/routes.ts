@@ -32,13 +32,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertDonationSchema.parse(req.body);
       const donation = await storage.createDonation(validatedData);
       
-      // In a real implementation, you would integrate with Razorpay or similar payment gateway here
-      // For now, we'll just create the donation record
-      
-      res.json({ 
-        success: true, 
+      // UPI payments are completed directly by the donor through their UPI app or QR code.
+      // The server records the donation intent; payment confirmation is not automated in this flow.
+      res.json({
+        success: true,
         donation,
-        paymentUrl: `https://checkout.razorpay.com/v1/checkout.js?amount=${donation.amount * 100}&currency=INR&order_id=${donation.id}`
       });
     } catch (error) {
       res.status(400).json({ success: false, error: "Invalid donation data" });
