@@ -66,6 +66,10 @@ export default function GetInvolved() {
     },
   });
 
+  const onVolunteerSubmit = (data: VolunteerFormData) => {
+    volunteerMutation.mutate(data);
+  };
+
   const donationMutation = useMutation({
     mutationFn: async (data: DonationFormData) => {
       const response = await apiRequest("POST", "/api/donations", data);
