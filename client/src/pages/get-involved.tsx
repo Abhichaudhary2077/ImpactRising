@@ -30,6 +30,7 @@ type DonationFormData = z.infer<typeof donationFormSchema>;
 export default function GetInvolved() {
   const [donationAmount, setDonationAmount] = useState("");
   const [isMonthly, setIsMonthly] = useState(false);
+  const [pendingUpiAmount, setPendingUpiAmount] = useState<number | null>(null);
   const UPI_ID = "YOUR_UPI_ID@UPI";
   const { toast } = useToast();
 
@@ -78,6 +79,9 @@ export default function GetInvolved() {
           : "Use the UPI app or QR code to complete your payment.",
       });
       setDonationAmount("");
+      if (!isMonthly && pendingUpiAmount) {
+        window.location.href = createUpiLink(pendingUpiAmount);
+      }
     },
     onError: () => {
       toast({
@@ -92,16 +96,15 @@ export default function GetInvolved() {
     `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=Impact%20Rising&am=${amount}&cu=INR`;
 
   const handleDonation = (amount: number) => {
+    if (!isMonthly) {
+      setPendingUpiAmount(amount);
+    }
     donationMutation.mutate({
       amount,
       isMonthly,
       donorName: undefined,
       donorEmail: undefined,
     });
-
-    if (!isMonthly) {
-      window.location.href = createUpiLink(amount);
-    }
   };
 
   const handleCustomDonation = () => {
