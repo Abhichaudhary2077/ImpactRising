@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, Users } from "lucide-react";
+import { Heart, Users, Copy, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +30,7 @@ type DonationFormData = z.infer<typeof donationFormSchema>;
 export default function GetInvolved() {
   const [donationAmount, setDonationAmount] = useState("");
   const [isMonthly, setIsMonthly] = useState(false);
+  const UPI_ID = "YOUR_UPI_ID@UPI";
   const { toast } = useToast();
 
   const volunteerForm = useForm<VolunteerFormData>({
@@ -71,36 +72,56 @@ export default function GetInvolved() {
     },
     onSuccess: () => {
       toast({
-        title: "Donation Initiated!",
-        description: "Thank you for your generosity. You'll be redirected to payment gateway.",
+        title: isMonthly ? "Monthly donation recorded" : "Donation recorded",
+        description: isMonthly
+          ? "Please complete your recurring UPI mandate separately."
+          : "Use the UPI app or QR code to complete your payment.",
       });
       setDonationAmount("");
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to process donation. Please try again.",
+        description: "Failed to record donation. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  const onVolunteerSubmit = (data: VolunteerFormData) => {
-    volunteerMutation.mutate(data);
-  };
+  const createUpiLink = (amount: number) =>
+    `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=Impact%20Rising&am=${amount}&cu=INR`;
 
   const handleDonation = (amount: number) => {
-    const donationData: DonationFormData = {
+    donationMutation.mutate({
       amount,
       isMonthly,
-    };
-    donationMutation.mutate(donationData);
+      donorName: undefined,
+      donorEmail: undefined,
+    });
+
+    if (!isMonthly) {
+      window.location.href = createUpiLink(amount);
+    }
   };
 
   const handleCustomDonation = () => {
-    const amount = parseInt(donationAmount);
-    if (amount > 0) {
-      handleDonation(amount);
+    const amount = parseInt(donationAmount, 10);
+    if (amount > 0) handleDonation(amount);
+  };
+
+  const copyUpiId = async () => {
+    try {
+      await navigator.clipboard.writeText(UPI_ID);
+      toast({
+        title: "UPI ID copied",
+        description: "Paste it into your UPI app to complete the payment.",
+      });
+    } catch {
+      toast({
+        title: "Copy failed",
+        description: "Please copy the UPI ID manually.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -133,78 +154,76 @@ export default function GetInvolved() {
                   Make a Donation
                 </h3>
                 <p className="text-muted-foreground mb-6" data-testid="donation-description">
-                  Your donation directly supports our programs and helps us reach more communities.
+                  Support Impact Rising directly through UPI. Choose an amount, then pay using your UPI app or scan the QR code.
                 </p>
               </div>
-              
+
               <div className="space-y-4 mb-6">
                 <div className="grid grid-cols-3 gap-3">
-                  <Button
-                    variant="outline"
-                    className="p-3 h-auto flex flex-col hover:border-secondary hover:bg-secondary/5 donate-button"
-                    onClick={() => handleDonation(500)}
-                    data-testid="donation-button-500"
-                  >
+                  <Button variant="outline" className="p-3 h-auto flex flex-col hover:border-secondary hover:bg-secondary/5 donate-button" onClick={() => handleDonation(500)} disabled={donationMutation.isPending} data-testid="donation-button-500">
                     <div className="font-semibold">₹500</div>
-                    <div className="text-xs text-muted-foreground">One month books</div>
+                    <div className="text-xs text-muted-foreground">Books</div>
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="p-3 h-auto flex flex-col hover:border-secondary hover:bg-secondary/5 donate-button"
-                    onClick={() => handleDonation(2000)}
-                    data-testid="donation-button-2000"
-                  >
+                  <Button variant="outline" className="p-3 h-auto flex flex-col hover:border-secondary hover:bg-secondary/5 donate-button" onClick={() => handleDonation(2000)} disabled={donationMutation.isPending} data-testid="donation-button-2000">
                     <div className="font-semibold">₹2,000</div>
                     <div className="text-xs text-muted-foreground">Skills training</div>
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="p-3 h-auto flex flex-col hover:border-secondary hover:bg-secondary/5 donate-button"
-                    onClick={() => handleDonation(5000)}
-                    data-testid="donation-button-5000"
-                  >
+                  <Button variant="outline" className="p-3 h-auto flex flex-col hover:border-secondary hover:bg-secondary/5 donate-button" onClick={() => handleDonation(5000)} disabled={donationMutation.isPending} data-testid="donation-button-5000">
                     <div className="font-semibold">₹5,000</div>
                     <div className="text-xs text-muted-foreground">School supplies</div>
                   </Button>
                 </div>
-                
+
                 <div className="flex items-center space-x-3">
-                  <Input
-                    type="number"
-                    placeholder="Custom amount"
-                    value={donationAmount}
-                    onChange={(e) => setDonationAmount(e.target.value)}
-                    className="flex-1"
-                    data-testid="input-custom-amount"
-                  />
-                  <Button
-                    className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                    onClick={handleCustomDonation}
-                    disabled={donationMutation.isPending}
-                    data-testid="button-custom-donate"
-                  >
+                  <Input type="number" min="1" placeholder="Custom amount" value={donationAmount} onChange={(e) => setDonationAmount(e.target.value)} className="flex-1" data-testid="input-custom-amount" />
+                  <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90" onClick={handleCustomDonation} disabled={donationMutation.isPending} data-testid="button-custom-donate">
                     {donationMutation.isPending ? "Processing..." : "Donate"}
                   </Button>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="monthly"
-                    checked={isMonthly}
-                    onCheckedChange={(checked) => setIsMonthly(checked as boolean)}
-                    data-testid="checkbox-monthly-donation"
-                  />
+                  <Checkbox id="monthly" checked={isMonthly} onCheckedChange={(checked) => setIsMonthly(checked === true)} data-testid="checkbox-monthly-donation" />
                   <label htmlFor="monthly" className="text-sm text-muted-foreground">
-                    Make this a monthly donation
+                    I want to donate monthly
                   </label>
                 </div>
+
+                <div className="rounded-xl border border-border bg-background/70 p-5 space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    {isMonthly ? "Monthly donation" : "One-time UPI donation"}
+                  </div>
+
+                  {isMonthly ? (
+                    <p className="text-sm text-muted-foreground">
+                      Monthly donations require a recurring UPI mandate. A static QR cannot create an automatic monthly mandate. Please contact Impact Rising for recurring-donation setup.
+                    </p>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                        <span className="font-mono text-sm break-all">{UPI_ID}</span>
+                        <Button type="button" variant="outline" size="icon" onClick={copyUpiId} title="Copy UPI ID">
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <div className="flex justify-center">
+                        <div className="w-64 h-64 rounded-lg border bg-white p-2 flex items-center justify-center">
+                          <img src="/donation-qr.png" alt="Impact Rising UPI QR code" className="w-full h-full object-contain" />
+                          <QrCode className="hidden" />
+                        </div>
+                      </div>
+                      <p className="text-xs text-center text-muted-foreground">
+                        Add your real <code>donation-qr.png</code> and replace <code>YOUR_UPI_ID@UPI</code> after pulling this change.
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
-              
+
               <div className="text-center text-sm text-muted-foreground" data-testid="donation-footer">
-                Secure payment powered by Razorpay • Tax exemption under 80G
+                One-time donations are paid directly to the configured NGO UPI account.
               </div>
             </div>
-            
+
             {/* Volunteer Section */}
             <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-8 border border-primary/20" data-testid="volunteer-section">
               <div className="text-center mb-8">
