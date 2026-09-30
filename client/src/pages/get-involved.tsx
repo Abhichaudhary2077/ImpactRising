@@ -31,7 +31,7 @@ export default function GetInvolved() {
   const [donationAmount, setDonationAmount] = useState("");
   const [isMonthly, setIsMonthly] = useState(false);
   const [pendingUpiAmount, setPendingUpiAmount] = useState<number | null>(null);
-  const UPI_ID = "YOUR_UPI_ID@UPI";
+  const UPI_ID = "wantmylifeeasy-2@okhdfcbank";
   const { toast } = useToast();
 
   const volunteerForm = useForm<VolunteerFormData>({
